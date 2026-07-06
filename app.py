@@ -4,7 +4,7 @@ from PyPDF2 import PdfReader
 import io
 
 # ===== تنظیمات =====
-HF_TOKEN = "YOUR_HUGGINGFACE_TOKEN"  # اینو با توکنی که از Hugging Face گرفتی عوض کن
+HF_TOKEN = "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"  
 MODEL_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
 
 # ===== عنوان صفحه =====

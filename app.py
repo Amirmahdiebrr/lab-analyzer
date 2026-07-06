@@ -6,8 +6,9 @@ import base64
 
 # ===== تنظیمات =====
 API_KEY = "sk-DrwzWv7lPqCFIvKVIdD2jmWCQ4tUUO5JuYbsGitSNrv8PlRZ"  
-API_URL = "https://api.chtgpt.ir/v1/chat/completions"  # آدرس API چت‌جی‌پی‌تی
-MODEL_NAME = "gpt-4o-mini"  # مدل عکس‌خوان (gpt-4o-mini یا gpt-4o)
+API_URL = "https://api.gapgpt.ir/v1/chat/completions"  # آدرس API گپ‌جی‌پی‌تی
+MODEL_NAME = "gpt-4o-mini"  # یا هر مدلی که گپ‌جی‌پی‌تی داره
+
 
 # ===== عنوان صفحه =====
 st.set_page_config(page_title="تحلیلگر آزمایشگاه", page_icon="🩺")

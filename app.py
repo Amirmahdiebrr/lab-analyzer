@@ -1,12 +1,14 @@
 import streamlit as st
-import google.generativeai as genai
+import requests
 from PIL import Image
 import io
+import base64
+import json
 
 # ===== تنظیمات =====
-GEMINI_KEY = "AQ.Ab8RN6Jyjb1kIa4skOfRve9nri15jTaYAAiztOxXD_HhAn2sJQ" 
-genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-1.0-pro')
+GEMINI_KEY = "AQ.Ab8RN6Jyjb1kIa4skOfRve9nri15jTaYAAiztOxXD_HhAn2sJQ"  # ⚠️ API Key خودت رو اینجا بذار
+MODEL_NAME = "gemini-1.5-flash"
+
 # ===== عنوان صفحه =====
 st.set_page_config(page_title="تحلیلگر آزمایشگاه", page_icon="🩺")
 st.title("🩺 تحلیلگر هوشمند آزمایشگاه (عکس و PDF)")
@@ -25,13 +27,41 @@ if uploaded_file is not None:
         if st.button("🔍 تحلیل کن"):
             with st.spinner("در حال تحلیل..."):
                 try:
+                    # تبدیل عکس به Base64
                     image = Image.open(uploaded_file)
-                    response = model.generate_content([
-                        "تو یک پزشک متخصص هستی. لطفاً این عکس آزمایشگاه را تحلیل کن. موارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست.",
-                        image
-                    ])
-                    st.markdown("### 📋 نتیجه تحلیل:")
-                    st.write(response.text)
+                    buffered = io.BytesIO()
+                    image.save(buffered, format="JPEG")
+                    img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                    
+                    # آماده‌سازی درخواست
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={GEMINI_KEY}"
+                    
+                    payload = {
+                        "contents": [
+                            {
+                                "parts": [
+                                    {"text": "تو یک پزشک متخصص هستی. لطفاً این عکس آزمایشگاه را تحلیل کن. موارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست."},
+                                    {
+                                        "inline_data": {
+                                            "mime_type": "image/jpeg",
+                                            "data": img_base64
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    
+                    response = requests.post(url, json=payload)
+                    
+                    if response.status_code == 200:
+                        result = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+                        st.markdown("### 📋 نتیجه تحلیل:")
+                        st.write(result)
+                    else:
+                        st.error(f"خطا: {response.status_code}")
+                        st.error(response.text)
+                        
                 except Exception as e:
                     st.error(f"خطا: {e}")
     
@@ -39,22 +69,39 @@ if uploaded_file is not None:
     elif file_type == 'application/pdf':
         st.info("📄 فایل PDF دریافت شد. در حال استخراج متن...")
         
-        # برای PDF از PyPDF2 استفاده می‌کنیم
-        from PyPDF2 import PdfReader
-        pdf_reader = PdfReader(uploaded_file)
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-        
-        st.success("✅ متن استخراج شد.")
-        
-        if st.button("🔍 تحلیل کن"):
-            with st.spinner("در حال تحلیل..."):
-                try:
-                    response = model.generate_content(
-                        f"تو یک پزشک متخصص هستی. لطفاً این نتایج آزمایش را تحلیل کن:\n\n{text}\n\nموارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست."
-                    )
-                    st.markdown("### 📋 نتیجه تحلیل:")
-                    st.write(response.text)
-                except Exception as e:
-                    st.error(f"خطا: {e}")
+        try:
+            # استفاده از PyPDF2 برای استخراج متن
+            from PyPDF2 import PdfReader
+            pdf_reader = PdfReader(uploaded_file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+            
+            st.success("✅ متن استخراج شد.")
+            
+            if st.button("🔍 تحلیل کن"):
+                with st.spinner("در حال تحلیل..."):
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={GEMINI_KEY}"
+                    
+                    payload = {
+                        "contents": [
+                            {
+                                "parts": [
+                                    {"text": f"تو یک پزشک متخصص هستی. لطفاً این نتایج آزمایش را تحلیل کن:\n\n{text}\n\nموارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست."}
+                                ]
+                            }
+                        ]
+                    }
+                    
+                    response = requests.post(url, json=payload)
+                    
+                    if response.status_code == 200:
+                        result = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+                        st.markdown("### 📋 نتیجه تحلیل:")
+                        st.write(result)
+                    else:
+                        st.error(f"خطا: {response.status_code}")
+                        st.error(response.text)
+                        
+        except Exception as e:
+            st.error(f"خطا در پردازش PDF: {e}")

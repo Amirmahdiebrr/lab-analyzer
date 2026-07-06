@@ -5,11 +5,10 @@ import io
 
 # ===== تنظیمات =====
 HF_TOKEN = "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"  
-MODEL_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
-
+MODEL_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
 # ===== عنوان صفحه =====
-st.set_page_config(page_title="تحلیلگر آزمایشگاه", page_icon="🩺")
-st.title("🩺 تحلیلگر هوشمند آزمایشگاه پزشکی")
+st.set_page_config(page_title="تحلیلگر آزمایش", page_icon="🩺")
+st.title("🩺 تحلیلگر هوشمند آزمایش پزشکی")
 st.warning("⚠️ این تحلیل فقط راهنمایی است و جایگزین نظر پزشک نیست.")
 
 # ===== آپلود فایل =====

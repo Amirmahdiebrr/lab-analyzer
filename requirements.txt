@@ -1,4 +1,5 @@
+openai
 streamlit
-requests
 Pillow
 PyPDF2
+requests

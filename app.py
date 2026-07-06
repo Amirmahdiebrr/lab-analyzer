@@ -7,8 +7,7 @@ import json
 
 # ===== تنظیمات =====
 GEMINI_KEY = "AQ.Ab8RN6Jyjb1kIa4skOfRve9nri15jTaYAAiztOxXD_HhAn2sJQ"  # ⚠️ API Key خودت رو اینجا بذار
-MODEL_NAME = "gemini-1.5-flash"
-
+MODEL_NAME = "gemini-pro"
 # ===== عنوان صفحه =====
 st.set_page_config(page_title="تحلیلگر آزمایشگاه", page_icon="🩺")
 st.title("🩺 تحلیلگر هوشمند آزمایشگاه (عکس و PDF)")

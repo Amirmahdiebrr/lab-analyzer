@@ -3,11 +3,12 @@ import requests
 from PIL import Image
 import io
 import base64
-import json
 
 # ===== تنظیمات =====
-GEMINI_KEY = "AQ.Ab8RN6Jyjb1kIa4skOfRve9nri15jTaYAAiztOxXD_HhAn2sJQ"  # ⚠️ API Key خودت رو اینجا بذار
-MODEL_NAME = "gemini-pro"
+API_KEY = "sk-DrwzWv7lPqCFIvKVIdD2jmWCQ4tUUO5JuYbsGitSNrv8PlRZ"  
+API_URL = "https://api.chtgpt.ir/v1/chat/completions"  # آدرس API چت‌جی‌پی‌تی
+MODEL_NAME = "gpt-4o-mini"  # مدل عکس‌خوان (gpt-4o-mini یا gpt-4o)
+
 # ===== عنوان صفحه =====
 st.set_page_config(page_title="تحلیلگر آزمایشگاه", page_icon="🩺")
 st.title("🩺 تحلیلگر هوشمند آزمایشگاه (عکس و PDF)")
@@ -33,28 +34,37 @@ if uploaded_file is not None:
                     img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
                     
                     # آماده‌سازی درخواست
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={GEMINI_KEY}"
+                    headers = {
+                        "Authorization": f"Bearer {API_KEY}",
+                        "Content-Type": "application/json"
+                    }
                     
                     payload = {
-                        "contents": [
+                        "model": MODEL_NAME,
+                        "messages": [
                             {
-                                "parts": [
-                                    {"text": "تو یک پزشک متخصص هستی. لطفاً این عکس آزمایشگاه را تحلیل کن. موارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست."},
+                                "role": "user",
+                                "content": [
                                     {
-                                        "inline_data": {
-                                            "mime_type": "image/jpeg",
-                                            "data": img_base64
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/jpeg;base64,{img_base64}"
                                         }
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "تو یک پزشک متخصص هستی. لطفاً این عکس آزمایشگاه را تحلیل کن. موارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست."
                                     }
                                 ]
                             }
-                        ]
+                        ],
+                        "max_tokens": 1000
                     }
                     
-                    response = requests.post(url, json=payload)
+                    response = requests.post(API_URL, headers=headers, json=payload)
                     
                     if response.status_code == 200:
-                        result = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+                        result = response.json()["choices"][0]["message"]["content"]
                         st.markdown("### 📋 نتیجه تحلیل:")
                         st.write(result)
                     else:
@@ -69,7 +79,6 @@ if uploaded_file is not None:
         st.info("📄 فایل PDF دریافت شد. در حال استخراج متن...")
         
         try:
-            # استفاده از PyPDF2 برای استخراج متن
             from PyPDF2 import PdfReader
             pdf_reader = PdfReader(uploaded_file)
             text = ""
@@ -80,22 +89,26 @@ if uploaded_file is not None:
             
             if st.button("🔍 تحلیل کن"):
                 with st.spinner("در حال تحلیل..."):
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={GEMINI_KEY}"
-                    
-                    payload = {
-                        "contents": [
-                            {
-                                "parts": [
-                                    {"text": f"تو یک پزشک متخصص هستی. لطفاً این نتایج آزمایش را تحلیل کن:\n\n{text}\n\nموارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست."}
-                                ]
-                            }
-                        ]
+                    headers = {
+                        "Authorization": f"Bearer {API_KEY}",
+                        "Content-Type": "application/json"
                     }
                     
-                    response = requests.post(url, json=payload)
+                    payload = {
+                        "model": MODEL_NAME,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": f"تو یک پزشک متخصص هستی. لطفاً این نتایج آزمایش را تحلیل کن:\n\n{text}\n\nموارد نرمال و غیرنرمال را مشخص کن. اگر مورد غیرنرمال دیدی با ⚠️ هشدار بده. در پایان بگو که این تحلیل جایگزین نظر پزشک نیست."
+                            }
+                        ],
+                        "max_tokens": 1000
+                    }
+                    
+                    response = requests.post(API_URL, headers=headers, json=payload)
                     
                     if response.status_code == 200:
-                        result = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+                        result = response.json()["choices"][0]["message"]["content"]
                         st.markdown("### 📋 نتیجه تحلیل:")
                         st.write(result)
                     else:
@@ -103,4 +116,4 @@ if uploaded_file is not None:
                         st.error(response.text)
                         
         except Exception as e:
-            st.error(f"خطا در پردازش PDF: {e}")
+        st.error(f"خطا در پردازش PDF: {e}")

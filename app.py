@@ -6,8 +6,7 @@ import io
 # ===== تنظیمات =====
 GEMINI_KEY = "AQ.Ab8RN6Jyjb1kIa4skOfRve9nri15jTaYAAiztOxXD_HhAn2sJQ" 
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
-
+model = genai.GenerativeModel('gemini-1.5-pro')
 # ===== عنوان صفحه =====
 st.set_page_config(page_title="تحلیلگر آزمایشگاه", page_icon="🩺")
 st.title("🩺 تحلیلگر هوشمند آزمایشگاه (عکس و PDF)")

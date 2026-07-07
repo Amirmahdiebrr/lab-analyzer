@@ -15,7 +15,13 @@ st.title("🩺 تحلیلگر هوشمند آزمایشگاه (عکس و PDF)")
 st.warning("⚠️ این تحلیل فقط راهنمایی است و جایگزین نظر پزشک نیست.")
 
 # ===== اتصال به API =====
-client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
+client = OpenAI(
+    base_url=BASE_URL,
+    api_key=API_KEY,
+    timeout=60.0,  # ⬅️ ۶۰ ثانیه صبر کن
+    max_retries=2   # ⬅️ اگه خطا خورد دوباره تلاش کن
+)
+
 
 # ===== آپلود فایل =====
 uploaded_file = st.file_uploader("فایل آزمایش (عکس یا PDF) را آپلود کنید", type=["pdf", "jpg", "jpeg", "png"])
@@ -63,8 +69,10 @@ if uploaded_file is not None:
                     st.markdown("### 📋 نتیجه تحلیل:")
                     st.write(result)
                         
-                except Exception as e:
-                    st.error(f"خطا: {e}")
+              except Exception as e:
+    st.error("⏱️ درخواست زمان‌بر شد. لطفاً دوباره تلاش کنید.")
+    if st.button("🔄 تلاش مجدد"):
+        st.rerun()
     
     # اگر PDF بود
     elif file_type == 'application/pdf':
